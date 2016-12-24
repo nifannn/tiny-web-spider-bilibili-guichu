@@ -1,8 +1,9 @@
-# author: nifannn
+
 # --------------------------------
 import sys
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
+import requests
+import json
 import re
 import pymysql.cursors
 import time
@@ -15,22 +16,12 @@ def MysqlConn():
 	conn = pymysql.connect(**config)
 	return conn
 
-# get short url of sub categories
-def filterSub(url):
-	html = urlopen(url)
-	bsObj = BeautifulSoup(html, 'html.parser')
-	
-
-# get all page numbers of sub category
-def getPageNumber(sub):
-	pass
-
-# get url for spider
-def getSURLs():
+# get sub ids 
+def getSubIds():
 	url = 'http://www.bilibili.com/video/kichiku.html'
-	return [sub +  '#!page=' + str(page)
-	        for sub in filterSub(url)
-	        for page in getPageNumber(sub)]
+	html = requests.get(url)
+	soup = BeautifulSoup(html.content.decode('utf-8'), 'html.parser')
+
 
 # get video id from url
 def filterAvIds(url):
@@ -58,12 +49,12 @@ def updateUpInfo(UpInfo):
 
 # scrap video info
 def spiderVideoInfo():
-	for surl in getSURLs():
-		url = 'http://www.bilibili.com/video/' + surl
-		for AvId in filterAvIds(url):
-			AvInfo = getAvInfo(AvId)
-			if AvInfo:
-				updateAvInfo(AvInfo)
+	for SubId in getSubIds():
+		for page in xrange(1, getMaxPageNumber(SubId) + 1):
+		    for AvId in filterAvIds(SubId, page):
+			    AvInfo = getAvInfo(AvId)
+			    if AvInfo:
+				    updateAvInfo(AvInfo)
 
 	return 1
 
