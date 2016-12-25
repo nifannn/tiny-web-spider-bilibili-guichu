@@ -16,6 +16,11 @@ def MysqlConn():
 	conn = pymysql.connect(**config)
 	return conn
 
+
+# get current time
+def getNowTime():
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
 # get sub ids 
 def getSubIds():
 	url = 'http://www.bilibili.com/video/kichiku.html'
@@ -39,11 +44,52 @@ def filterAvJsonData(SubId, PageNo):
 
 # get video info from json data
 def getAvInfo(AvJsonData):
-    pass
+    dbmap = {'AvId': 'aid',
+             'Title': 'title',
+             'Sub': 'tname',
+             'CreateTime': 'create',
+             'Play': 'play',
+             'Danmaku': 'danmaku',
+             'Coin': 'coin',
+             'Favorite': 'favorites',
+             'UpName': 'author',
+             'UpId': 'mid',
+             'Duration': 'duration',
+             'Share': 'share',
+             'Tag': 'tags',
+             'Description': 'description',
+             'Reply': 'reply',
+             'AvPic': 'pic',
+             'AvFace': 'face'}
+    AvInfo = dict()
+    AvJsonData.update(AvJsonData['stat'])
+    for sqlname, jsonname in dbmap.items():
+        AvInfo[sqlname] = AvJsonData[jsonname]
+    AvInfo['Tag'] = '|'.join(AvInfo['Tag'])
+    return AvInfo
 
 # update video info
 def updateAvInfo(AvInfo):
-	pass
+	conn = MysqlConn()
+    try:
+        with conn.cursor() as cursor:
+            sqlname = "REPLACE INTO Guichu_Video "
+            colname = '(AvId, Title, Sub, UpId, UpName, CreateTime, Play, Danmaku, Coin, Favorite, Reply, Share, Duration, Tag, Description, AvPic, UpFace, ScrapedTime) '
+            sql = sqlname + colname + 'VALUES (' + '%s,' * 17 + '%s)'
+            value = (AvInfo['AvId'],AvInfo['Title'],AvInfo['Sub'],AvInfo['UpId'],
+                     AvInfo['UpName'],AvInfo['CreateTime'],AvInfo['Play'],AvInfo['Danmaku'],
+                     AvInfo['Coin'],AvInfo['Favorite'],AvInfo['Reply'],AvInfo['Share'],
+                     AvInfo['Duration'],AvInfo['Tag'],AvInfo['Description'],AvInfo['AvPic'],
+                     AvInfo['UpFace'],getNowTime())
+            cursor.execute(sql, value)
+
+        conn.commit()
+    except pymysql.err.InternalError as e:
+        print(e)
+    except:
+        print('update Video Info error, Id:' + str(AvInfo['AvId']))
+    finally:
+        conn.close()
 
 # get up id from mysql
 def selectUpIds():

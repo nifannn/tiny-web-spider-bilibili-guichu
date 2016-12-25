@@ -12,7 +12,7 @@ create table if not exists `Guichu_Video`(
 		`Play` int unsigned not null default 0 comment '播放次数',
 		`Danmaku` int unsigned not null default 0 comment '弹幕数',
 		`Coin` int unsigned not null default 0 comment '硬币数',
-		`Favourite` int unsigned not null default 0 comment '收藏数',
+		`Favorite` int unsigned not null default 0 comment '收藏数',
 		`Reply` int unsigned not null default 0 comment '评论数',
 		`Share` int unsigned not null default 0 comment '分享数',
 		`Duration` int unsigned not null default 0 comment '时长',
