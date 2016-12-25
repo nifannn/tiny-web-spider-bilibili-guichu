@@ -20,6 +20,6 @@ create table if not exists `Guichu_Video`(
 		`Description` varchar(800) not null default '' comment '描述',
 		`AvPic` varchar(255) not null default '' comment '封面地址',
 		`UpFace` varchar(255) not null default '' comment 'Up头像地址',
-		`ScrapedTime` timestamp not null comment '爬虫更新时间',
+		`ScrapedTime` timestamp not null default CURRENT_TIMESTAMP comment '爬虫更新时间',
 		Primary key(`AvId`)
 		) Engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
