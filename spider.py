@@ -3,10 +3,10 @@
 import sys
 from bs4 import BeautifulSoup
 import requests
-import json
 import re
 import pymysql.cursors
 import time
+from math import ceil
 
 # connect to mysql server
 def MysqlConn():
@@ -21,15 +21,25 @@ def getSubIds():
 	url = 'http://www.bilibili.com/video/kichiku.html'
 	html = requests.get(url)
 	soup = BeautifulSoup(html.content.decode('utf-8'), 'html.parser')
+	text = soup.find('div', {'class':'b-page-body'}).script.get_text()
+	return [int(tid) for tid in re.findall('[0-9]+', text)[1:]]
 
+# get max page number from sub id
+def getMaxPageNumber(SubId):
+    url = 'http://api.bilibili.com/archive_rank/getarchiverankbypartion'
+    jsonData = requests.get(url, {'tid':SubId}).json()['data']
+    count = jsonData['page']['count']
+    size = jsonData['page']['size']
+    return ceil(count / size)
 
-# get video id from url
-def filterAvIds(url):
-	pass
+# get video info json data
+def filterAvJsonData(SubId, PageNo):
+	url = 'http://api.bilibili.com/archive_rank/getarchiverankbypartion'
+    return requests.get(url, {'tid':SubId,'pn':PageNo}).json()['data']['archives']
 
-# get video info from id
-def getAvInfo(AvId):
-	pass
+# get video info from json data
+def getAvInfo(AvJsonData):
+    pass
 
 # update video info
 def updateAvInfo(AvInfo):
@@ -50,9 +60,9 @@ def updateUpInfo(UpInfo):
 # scrap video info
 def spiderVideoInfo():
 	for SubId in getSubIds():
-		for page in xrange(1, getMaxPageNumber(SubId) + 1):
-		    for AvId in filterAvIds(SubId, page):
-			    AvInfo = getAvInfo(AvId)
+		for PageNo in range(1, getMaxPageNumber(SubId) + 1):
+		    for AvJsonData in filterAvJsonData(SubId, PageNo):
+			    AvInfo = getAvInfo(AvJsonData)
 			    if AvInfo:
 				    updateAvInfo(AvInfo)
 
