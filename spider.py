@@ -112,10 +112,23 @@ def selectUpIds():
         results = cursor.fetchall()
 
     conn.close()
-    return [list(result.values())[0] for result in results]
+    return set([list(result.values())[0] for result in results])
 
-# get up info from id
-def getUpInfo(UpId):
+# get up json data from id
+def getUpJsonData(UpId):
+    url = 'http://space.bilibili.com/ajax/member/GetInfo'
+    referer = 'http://space.bilibili.com/' + str(UpId)
+    headers = {'X-Requested-With':'XMLHttpRequest', 'Referer':referer}
+    payload = {'mid':UpId}
+    jsondata = requests.post(url,headers=headers, data=payload).json()
+    if jsondata['status']:
+        return jsondata['data']
+    else:
+        print('get json data error, Up Id: ' + str(UpId))
+        return 0
+
+# get up info from json data
+def getUpInfo(UpJsonData):
 	pass
 
 # update up info
@@ -136,7 +149,8 @@ def spiderVideoInfo():
 # scrap up info
 def spiderUpInfo():
 	for UpId in selectUpIds():
-		UpInfo = getUpInfo(UpId)
+        UpJsonData = getUpJsonData(UpId)
+		UpInfo = getUpInfo(UpJsonData)
 		if UpInfo:
 			updateUpInfo(UpInfo)
 
@@ -155,7 +169,14 @@ def getVideoCount():
 
 # get up count
 def getUpCount():
-    pass
+    conn = MysqlConn()
+    with conn.cursor() as cursor:
+        sql = "SELECT COUNT(UpId) FROM Guichu_Up"
+        cursor.execute(sql)
+        result = cursor.fetchone()
+
+    conn.close()
+    return list(result.values())[0]
 
 def main(argv):
     usage = 'Usage: python spider.py [spiderVideoInfo|spiderUpInfo|getVideoCount|getUpCount]'
