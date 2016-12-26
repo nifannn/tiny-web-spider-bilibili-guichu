@@ -68,9 +68,10 @@ def getAvInfo(AvJsonData,SubId,PageNo):
     if AvJsonData['favorites'] == -1:
         AvJsonData['favorites'] = 0
     if AvJsonData['create'] == '--':
-        AvJsonData['create'] = filterAvJsonData(SubId,PageNo)[-1]['create']
-    else:
-        AvJsonData['create'] = getNowTime()
+        if PageNo != 1:
+            AvJsonData['create'] = filterAvJsonData(SubId,PageNo-1)[-1]['create']
+        else:
+            AvJsonData['create'] = getNowTime()
     
     AvJsonData.update(AvJsonData['stat'])
     for sqlname, jsonname in dbmap.items():
